@@ -1,0 +1,20 @@
+[Unit]
+Description=FastDB C++ Real-Time Database Server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/database
+ExecStart=/home/ubuntu/database/fastdb/fastdb_server --port 5500 --public /home/ubuntu/database/public
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+# Environment variables
+Environment=PORT=5500
+Environment=JWT_SECRET=fast-db-secret-key-12345
+Environment=FASTDB_PUBLIC_DIR=/home/ubuntu/database/public
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastDB — Developer Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#10B981" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">FastDB</span>
+                    <span class="brand-badge">Developer Cloud</span>
+                </div>
+            </div>
+
+            <div class="nav-status">
+                <div id="connection-pill" class="status-pill disconnected">
+                    <span class="status-dot"></span>
+                    <span id="connection-status-text">Connecting to FastDB...</span>
+                </div>
+            </div>
+
+            <div class="nav-user" id="nav-user-section">
+                <!-- Injected via JavaScript based on auth state -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="main-container">
+        <!-- Auth Section (Shown when logged out) -->
+        <section id="auth-section" class="auth-section">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="auth-icon-wrap">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        </svg>
+                    </div>
+                    <h2>FastDB Developer Portal</h2>
+                    <p>Create an account to generate databases, manage keys, and explore data with interactive tables.</p>
+                </div>
+
+                <div class="auth-tabs">
+                    <button class="tab-btn active" id="tab-register-btn" onclick="switchAuthTab('register')">Create Account</button>
+                    <button class="tab-btn" id="tab-login-btn" onclick="switchAuthTab('login')">Sign In</button>
+                </div>
+
+                <!-- Register Form -->
+                <form id="register-form" class="auth-form" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="reg-name">Full Name</label>
+                        <input type="text" id="reg-name" placeholder="e.g. Joshua David" required autocomplete="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-email">Developer Email</label>
+                        <input type="email" id="reg-email" placeholder="developer@fastdb.com" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" placeholder="Create a secure password" required autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="reg-submit-btn">
+                        <span>Create Developer Account</span>
+                    </button>
+                </form>
+
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form hidden" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="login-email">Developer Email</label>
+                        <input type="email" id="login-email" placeholder="developer@fastdb.com" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" placeholder="Enter your password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="login-submit-btn">
+                        <span>Sign In to Console</span>
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p class="features-line">
+                        <span>Real-Time Socket Connection</span>
+                        <span>•</span>
+                        <span>Secure API Keys</span>
+                        <span>•</span>
+                        <span>Collections & Tables</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Section (Shown when logged in) -->
+        <section id="dashboard-section" class="dashboard-section hidden">
+            <!-- View 1: Databases Overview -->
+            <div id="databases-overview-view">
+                <!-- Developer Info Strip -->
+                <div class="dev-banner">
+                    <div class="dev-banner-left">
+                        <div class="dev-avatar" id="dev-avatar">D</div>
+                        <div>
+                            <div class="dev-name-wrap">
+                                <h2 id="dev-name">Developer</h2>
+                                <span class="badge badge-success">Active Session</span>
+                            </div>
+                            <p class="dev-email" id="dev-email">user@fastdb.com</p>
+                        </div>
+                    </div>
+
+                    <div class="dev-banner-right">
+                        <div class="key-box">
+                            <div class="key-box-label">Your Author / User ID (userId)</div>
+                            <div class="key-box-val-row">
+                                <code class="key-code" id="dev-uid">41f8f37c-9bbf-434e-906d-fa6e21b39906</code>
+                                <button class="btn btn-sm btn-ghost" onclick="copyText(document.getElementById('dev-uid').textContent, 'Author ID')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                    Copy UID
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Databases Section Header -->
+                <div class="section-header">
+                    <div>
+                        <h3 class="section-title">Your Databases</h3>
+                        <p class="section-desc">Manage your cloud databases, copy credentials, or open Data Studio to inspect tables.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateDbModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        New Database
+                    </button>
+                </div>
+
+                <!-- Databases Grid -->
+                <div id="databases-grid" class="databases-grid">
+                    <!-- Injected via JavaScript -->
+                </div>
+
+                <!-- Empty State (if no databases) -->
+                <div id="empty-state" class="empty-state hidden">
+                    <div class="empty-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        </svg>
+                    </div>
+                    <h4>No databases created yet</h4>
+                    <p>Create your first database to get an API key and open Data Studio.</p>
+                    <button class="btn btn-primary mt-4" onclick="openCreateDbModal()">Create First Database</button>
+                </div>
+            </div>
+
+            <!-- View 2: Data Studio (Table & Column Data Browser) -->
+            <div id="data-studio-view" class="data-studio hidden">
+                <!-- Studio Header & Breadcrumbs -->
+                <div class="studio-topbar">
+                    <div class="studio-breadcrumb">
+                        <button class="btn btn-sm btn-ghost" onclick="closeDataStudio()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            Databases
+                        </button>
+                        <span class="crumb-separator">/</span>
+                        <div class="studio-db-info">
+                            <span class="studio-db-name" id="studio-db-name">Sellore</span>
+                            <code class="studio-db-id" id="studio-db-id">3670e6dd-250f-...</code>
+                        </div>
+                    </div>
+
+                    <div class="studio-controls">
+                        <!-- View Mode Switcher -->
+                        <div class="view-mode-pill">
+                            <button class="view-mode-btn active" id="btn-view-columns" onclick="setStudioViewMode('columns')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="5" height="18" rx="1"></rect>
+                                    <rect x="10" y="3" width="5" height="18" rx="1"></rect>
+                                    <rect x="17" y="3" width="5" height="18" rx="1"></rect>
+                                </svg>
+                                Column View
+                            </button>
+                            <button class="view-mode-btn" id="btn-view-table" onclick="setStudioViewMode('table')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                                </svg>
+                                Table View
+                            </button>
+                        </div>
+
+                        <button class="btn btn-sm btn-secondary" onclick="refreshStudioData()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mode A: 3-Column Document Explorer -->
+                <div id="studio-columns-container" class="studio-columns-layout">
+                    <!-- Column 1: Collections -->
+                    <div class="fs-col fs-col-collections">
+                        <div class="fs-col-header">
+                            <span class="fs-col-title">Collections</span>
+                            <button class="btn btn-xs btn-primary" onclick="openAddCollectionModal()">+ Add Collection</button>
+                        </div>
+                        <div class="fs-col-list" id="fs-collections-list">
+                            <!-- Collections injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Documents in Collection -->
+                    <div class="fs-col fs-col-documents">
+                        <div class="fs-col-header">
+                            <span class="fs-col-title" id="fs-active-collection-title">Documents</span>
+                            <button class="btn btn-xs btn-primary" onclick="openAddDocumentModal()">+ Add Document</button>
+                        </div>
+                        <div class="fs-search-bar">
+                            <input type="text" id="fs-doc-filter-input" placeholder="Filter by Document ID..." oninput="filterDocumentsList(this.value)">
+                        </div>
+                        <div class="fs-col-list" id="fs-documents-list">
+                            <div class="fs-empty-hint">Select a collection on the left</div>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Document Inspector (Fields) -->
+                    <div class="fs-col fs-col-inspector">
+                        <div class="fs-col-header">
+                            <div class="inspector-header-left">
+                                <span class="fs-col-title">Document Inspector</span>
+                                <span class="doc-id-pill" id="fs-active-doc-id-pill">No document selected</span>
+                            </div>
+                            <div class="inspector-actions" id="fs-inspector-actions">
+                                <button class="btn btn-xs btn-secondary" onclick="openAddFieldModal()" id="btn-add-field" disabled>+ Add Field</button>
+                                <button class="btn btn-xs btn-danger" onclick="deleteActiveDocument()" id="btn-delete-doc" disabled>Delete Doc</button>
+                            </div>
+                        </div>
+                        <div class="fs-inspector-body" id="fs-inspector-body">
+                            <div class="fs-empty-hint">Select a document from the center column to view and edit its fields.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode B: Table Grid Spreadsheet View -->
+                <div id="studio-table-container" class="studio-table-layout hidden">
+                    <div class="table-view-topbar">
+                        <div class="table-view-controls">
+                            <div class="collection-select-wrapper">
+                                <label for="table-collection-select">Active Collection:</label>
+                                <select id="table-collection-select" onchange="onTableCollectionChange(this.value)">
+                                    <!-- Populated via JS -->
+                                </select>
+                            </div>
+                            <span class="badge badge-cyan" id="table-row-count-badge">0 documents</span>
+                        </div>
+                        <div class="table-view-actions">
+                            <button class="btn btn-sm btn-primary" onclick="openAddDocumentModal()">+ Add Document</button>
+                        </div>
+                    </div>
+
+                    <div class="table-scroll-wrapper">
+                        <table class="fs-data-table" id="fs-data-table">
+                            <thead id="fs-table-head">
+                                <!-- Dynamic Headers injected here -->
+                            </thead>
+                            <tbody id="fs-table-body">
+                                <!-- Dynamic Rows injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create Database Modal -->
+    <div id="create-db-modal" class="modal-backdrop hidden" onclick="if(event.target === this) closeCreateDbModal()">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Create New Database</h3>
+                <button class="modal-close-btn" onclick="closeCreateDbModal()">&times;</button>
+            </div>
+            <form onsubmit="handleCreateDatabase(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new-db-name">Database Name</label>
+                        <input type="text" id="new-db-name" placeholder="e.g. Sellora, StoreDB, Production" required autofocus>
+                        <span class="field-hint">A friendly name for your database. You will immediately receive a unique databaseId and apiKey.</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateDbModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="create-db-submit-btn">Create Database</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Collection Modal -->
+    <div id="add-collection-modal" class="modal-backdrop hidden" onclick="if(event.target === this) closeAddCollectionModal()">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Start New Collection</h3>
+                <button class="modal-close-btn" onclick="closeAddCollectionModal()">&times;</button>
+            </div>
+            <form onsubmit="handleAddCollectionSubmit(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new-collection-name">Collection ID</label>
+                        <input type="text" id="new-collection-name" placeholder="e.g. users, products, orders" required autofocus>
+                        <span class="field-hint">Collections are top-level containers for documents.</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddCollectionModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Start Collection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Document Modal -->
+    <div id="add-document-modal" class="modal-backdrop hidden" onclick="if(event.target === this) closeAddDocumentModal()">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Add Document to <span id="modal-doc-col-title">Collection</span></h3>
+                <button class="modal-close-btn" onclick="closeAddDocumentModal()">&times;</button>
+            </div>
+            <form onsubmit="handleAddDocumentSubmit(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new-doc-id">Document ID (Optional)</label>
+                        <input type="text" id="new-doc-id" placeholder="Leave empty for Auto-ID">
+                        <span class="field-hint">Leave blank to automatically generate a unique UUID.</span>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label for="new-doc-json">Document Data (JSON)</label>
+                        <textarea id="new-doc-json" rows="6" style="font-family: var(--font-mono); font-size: 0.85rem;" required>{\n  "name": "Alex Vance",\n  "email": "alex@example.com",\n  "status": "Active",\n  "age": 28\n}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddDocumentModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Document</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Field Modal -->
+    <div id="add-field-modal" class="modal-backdrop hidden" onclick="if(event.target === this) closeAddFieldModal()">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Add Field to Document</h3>
+                <button class="modal-close-btn" onclick="closeAddFieldModal()">&times;</button>
+            </div>
+            <form onsubmit="handleAddFieldSubmit(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new-field-name">Field Name</label>
+                        <input type="text" id="new-field-name" placeholder="e.g. role, age, isVerified" required autofocus>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label for="new-field-type">Field Type</label>
+                        <select id="new-field-type" onchange="onFieldTypeChange(this.value)">
+                            <option value="string">string</option>
+                            <option value="number">number</option>
+                            <option value="boolean">boolean</option>
+                            <option value="json">json / object</option>
+                        </select>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label for="new-field-value">Field Value</label>
+                        <input type="text" id="new-field-value" placeholder="Enter value" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddFieldModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Field</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Socket.io script from local server with CDN fallback -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        if (typeof io === 'undefined') {
+            document.write('<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"><\/script>');
+        }
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
